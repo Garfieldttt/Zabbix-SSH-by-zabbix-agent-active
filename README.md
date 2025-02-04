@@ -23,5 +23,5 @@ crontab -e
 ```bash
 * * * * * /usr/local/sbin/filter-auth.sh
 ```
-Step 3: Import the Zabbix Template
+### Step 3: Import the Zabbix Template
 Follow your standard Zabbix template import procedure to load the template into your Zabbix server.
