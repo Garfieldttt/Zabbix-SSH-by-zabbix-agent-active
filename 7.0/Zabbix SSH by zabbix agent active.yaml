@@ -1,0 +1,117 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 2d7868161fb94f9e94c63631dfec3f58
+      template: 'Zabbix SSH by zabbix agent active'
+      name: 'Zabbix SSH by zabbix agent active'
+      description: |
+        Created by: Thomas Rzen
+        
+        For more information, visit https://github.com/Garfieldttt/Zabbix-SSH-by-zabbix-agent-active
+      groups:
+        - name: Templates
+      items:
+        - uuid: 696cb880924c43969063524de8e2e641
+          name: auth.raw
+          type: ZABBIX_ACTIVE
+          key: 'vfs.file.contents[{$LOG.PATH}]'
+          history: 1d
+          value_type: TEXT
+          trends: '0'
+      discovery_rules:
+        - uuid: 7980e6b70d464a8ab8cb4189ecb20de6
+          name: auth.discover
+          type: DEPENDENT
+          key: auth.doscover
+          delay: '0'
+          lifetime_type: DELETE_NEVER
+          lifetime: '0'
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: a8b1b9963d40447caa0b118622f0d7e4
+              name: 'Successful login attempt by {#USER}'
+              type: DEPENDENT
+              key: 'login.success[{#USER}]'
+              delay: '0'
+              history: 365d
+              value_type: LOG
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.success_user == "{#USER}")].source_ip'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: STR_REPLACE
+                  parameters:
+                    - '","'
+                    - ', '
+              master_item:
+                key: 'vfs.file.contents[{$LOG.PATH}]'
+              tags:
+                - tag: SSH
+                  value: success-login
+          master_item:
+            key: 'vfs.file.contents[{$LOG.PATH}]'
+          lld_macro_paths:
+            - lld_macro: '{#USER}'
+              path: $.success_user
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.[*]'
+        - uuid: 7a93d17c8da1487294fb856870773d14
+          name: auth.discover.failed
+          type: DEPENDENT
+          key: auth.doscover.failed
+          delay: '0'
+          lifetime_type: DELETE_NEVER
+          lifetime: '0'
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 60f1b0c3840546979e825410d249c4a7
+              name: 'Failed login attempt by {#USER}'
+              type: DEPENDENT
+              key: 'login.failed[{#USER}]'
+              delay: '0'
+              history: 365d
+              value_type: LOG
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.failed_user == "{#USER}")].source_ip'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: STR_REPLACE
+                  parameters:
+                    - '","'
+                    - ', '
+              master_item:
+                key: 'vfs.file.contents[{$LOG.PATH}]'
+              tags:
+                - tag: SSH
+                  value: failed-login
+          master_item:
+            key: 'vfs.file.contents[{$LOG.PATH}]'
+          lld_macro_paths:
+            - lld_macro: '{#USER}'
+              path: $.failed_user
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.[*]'
+      macros:
+        - macro: '{$LOG.PATH}'
+          value: /var/log/ssh-auth.json
