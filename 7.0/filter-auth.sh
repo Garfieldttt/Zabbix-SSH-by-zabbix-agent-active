@@ -4,17 +4,17 @@ LOGFILE="/var/log/auth.log"
 OUTPUT="/var/log/ssh-auth.json"
 
 awk 'BEGIN { IGNORECASE=1 }
-    # Verarbeitung von Zeilen mit "Invalid user"
+    # Verarbeitung von Zeilen mit "Invalid user" (fehlgeschlagene Logins)
     /Invalid user/ {
         ts = $1;
         host = $2;
-        user = "unknown";
+        failed_user = "unknown";
         src = "unknown";
         msg = "";
         for(i = 3; i <= NF; i++){
             msg = msg " " $i;
             if($i == "Invalid" && $(i+1) == "user"){
-                user = $(i+2);
+                failed_user = $(i+2);
             }
             if($i == "from"){
                 src = $(i+1);
@@ -22,27 +22,26 @@ awk 'BEGIN { IGNORECASE=1 }
         }
         gsub(/^ /, "", msg);
         if(src != "unknown")
-            printf "{\"timestamp\":\"%s\", \"host_name\":\"%s\", \"user\":\"%s\", \"source_ip_failed\":\"%s\", \"message\":\"%s\"}\n", ts, host, user, src, msg;
+            printf "{\"timestamp\":\"%s\", \"host_name\":\"%s\", \"failed_user\":\"%s\", \"source_ip\":\"%s\", \"message\":\"%s\"}\n", ts, host, failed_user, src, msg;
     }
-    # Verarbeitung von Zeilen mit "Accepted" (z.B. password oder publickey)
+    # Verarbeitung von Zeilen mit "Accepted" (erfolgreiche Logins)
     /Accepted/ {
         ts = $1;
         host = $2;
-        user = "unknown";
+        success_user = "unknown";
         src = "unknown";
         msg = "";
         for(i = 3; i <= NF; i++){
             msg = msg " " $i;
             if($i == "for"){
-                user = $(i+1);
+                success_user = $(i+1);
             }
             if($i == "from"){
                 src = $(i+1);
             }
         }
         gsub(/^ /, "", msg);
-        if(src != "unknown" && user != "unknown")
-            printf "{\"timestamp\":\"%s\", \"host_name\":\"%s\", \"user\":\"%s\", \"source_ip_success\":\"%s\", \"message\":\"%s\"}\n", ts, host, user, src, msg;
+        if(src != "unknown" && success_user != "unknown")
+            printf "{\"timestamp\":\"%s\", \"host_name\":\"%s\", \"success_user\":\"%s\", \"source_ip\":\"%s\", \"message\":\"%s\"}\n", ts, host, success_user, src, msg;
     }
 ' "$LOGFILE" | jq -s . > "$OUTPUT"
-
