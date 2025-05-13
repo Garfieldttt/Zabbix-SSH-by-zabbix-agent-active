@@ -27,9 +27,8 @@ zabbix_export:
           type: DEPENDENT
           key: auth.doscover
           delay: '0'
-          lifetime_type: DELETE_NEVER
+          lifetime_type: DELETE_IMMEDIATELY
           lifetime: '0'
-          enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
             - uuid: a8b1b9963d40447caa0b118622f0d7e4
               name: 'Successful login attempt by {#USER}'
@@ -37,12 +36,12 @@ zabbix_export:
               key: 'login.success[{#USER}]'
               delay: '0'
               history: 365d
-              value_type: LOG
+              value_type: TEXT
               trends: '0'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$[?(@.success_user == "{#USER}")].source_ip'
+                    - '$[?(@.success_user == ''{#USER}'')].source_ip'
                 - type: LTRIM
                   parameters:
                     - '["'
@@ -82,12 +81,13 @@ zabbix_export:
               key: 'login.failed[{#USER}]'
               delay: '0'
               history: 365d
-              value_type: LOG
+              value_type: TEXT
               trends: '0'
               preprocessing:
                 - type: JSONPATH
                   parameters:
-                    - '$[?(@.failed_user == "{#USER}")].source_ip'
+                    - '$[?(@.failed_user==''{#USER}'')].source_ip'
+                  error_handler: DISCARD_VALUE
                 - type: LTRIM
                   parameters:
                     - '["'
